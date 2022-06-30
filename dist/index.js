@@ -19691,9 +19691,6 @@ function run() {
             (yield notion.search({})).results.forEach(p => {
                 var _a;
                 let r = p;
-                console.log(r.id);
-                console.log(r.object);
-                console.log(r.properties);
                 if (r.object == 'page') {
                     let title = (_a = r.properties.Title) === null || _a === void 0 ? void 0 : _a.title[0].plain_text;
                     if (title !== undefined) {

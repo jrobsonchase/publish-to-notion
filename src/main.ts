@@ -32,9 +32,6 @@ async function run(): Promise<void> {
     let pages = Object({})
     ;(await notion.search({})).results.forEach(p => {
       let r = p as {id: string; object: string; properties: any}
-      console.log(r.id)
-      console.log(r.object)
-      console.log(r.properties)
       if (r.object == 'page') {
         let title = r.properties.Title?.title[0].plain_text
         if (title !== undefined) {
