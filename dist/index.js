@@ -19664,27 +19664,28 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 function run() {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const notion = new _notionhq_client__WEBPACK_IMPORTED_MODULE_1__/* .Client */ .KU({
                 auth: (_a = process.env.NOTION_TOKEN) !== null && _a !== void 0 ? _a : _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('notion_token')
             });
+            const rootDir = (_b = process.env.MD_ROOT) !== null && _b !== void 0 ? _b : _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('markdown_root');
             let wikiPages = Object({});
-            mdFiles('./').forEach(file => {
+            mdFiles(rootDir).forEach(file => {
                 const text = (0,fs__WEBPACK_IMPORTED_MODULE_2__.readFileSync)(file).toString('utf8');
                 const blocks = (0,_tryfabric_martian__WEBPACK_IMPORTED_MODULE_4__.markdownToBlocks)(text);
-                wikiPages[file] = blocks; /*.map(block => {
-                  if (block.type === 'paragraph') {
-                    block.paragraph.rich_text = block.paragraph.rich_text.map(obj => {
-                      if (obj.type === 'text') {
-                        obj.text.content = obj.text.content.replace(/\n/g, ' ');
-                      }
-                      return obj;
-                    });
-                  }
-                  return block;
-                })*/
+                wikiPages[file] = blocks.map(block => {
+                    if (block.type === 'paragraph') {
+                        block.paragraph.rich_text = block.paragraph.rich_text.map(obj => {
+                            if (obj.type === 'text') {
+                                obj.text.content = obj.text.content.replace(/\n/g, ' ');
+                            }
+                            return obj;
+                        });
+                    }
+                    return block;
+                });
             });
             let root = '';
             let pages = Object({});

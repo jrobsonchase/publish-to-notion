@@ -10,12 +10,14 @@ async function run(): Promise<void> {
       auth: process.env.NOTION_TOKEN ?? core.getInput('notion_token')
     })
 
+    const rootDir = process.env.MD_ROOT ?? core.getInput('markdown_root')
+
     let wikiPages = Object({})
-    mdFiles('./').forEach(file => {
+    mdFiles(rootDir).forEach(file => {
       const text = readFileSync(file).toString('utf8')
       const blocks = markdownToBlocks(text)
 
-      wikiPages[file] = blocks /*.map(block => {
+      wikiPages[file] = blocks.map(block => {
         if (block.type === 'paragraph') {
           block.paragraph.rich_text = block.paragraph.rich_text.map(obj => {
             if (obj.type === 'text') {
@@ -25,7 +27,7 @@ async function run(): Promise<void> {
           });
         }
         return block;
-      })*/
+      })
     })
 
     let root = ''

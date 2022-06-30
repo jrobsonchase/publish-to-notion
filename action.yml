@@ -5,6 +5,9 @@ inputs:
   notion_token:
     required: true
     description: 'Secret for use with your Notion integration'
+  markdown_root:
+    required: true
+    description: 'Directory in which to look for markdown files'
 runs:
   using: 'node16'
   main: 'dist/index.js'
