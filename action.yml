@@ -1,11 +1,10 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Josh Robson Chase'
+description: 'Action to publish markdown documents to notion'
+author: 'Josh Robson Chase'
 inputs:
-  milliseconds: # change this
+  notion_token:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    description: 'Secret for use with your Notion integration'
 runs:
   using: 'node16'
   main: 'dist/index.js'
