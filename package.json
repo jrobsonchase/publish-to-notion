@@ -29,10 +29,12 @@
   "dependencies": {
     "@actions/core": "^1.6.0",
     "@notionhq/client": "^1.0.4",
-    "@tryfabric/martian": "^1.2.4"
+    "@tryfabric/martian": "^1.2.4",
+    "titleize": "^3.0.0",
+    "yaml": "^2.1.1"
   },
   "devDependencies": {
-    "@types/node": "^16.10.5",
+    "@types/node": "^17.0.29",
     "@typescript-eslint/parser": "^5.8.1",
     "@vercel/ncc": "^0.31.1",
     "eslint": "^7.32.0",
