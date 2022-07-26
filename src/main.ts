@@ -147,13 +147,10 @@ async function run(): Promise<void> {
     let root = ''
     let pages = Object({});
     (await notion.search({})).results.forEach(p => {
-      let r = p as { id: string; object: string; properties: any }
+      let r = p as { id: string; object: string; properties: any, parent: any }
       if (r.object == 'page') {
         let path = r.properties.Path?.rich_text[0]?.text.content || r.id;
-        pages[path] = {
-          id: r.id,
-          properties: r.properties,
-        };
+        pages[path] = r;
       } else if (r.object === 'database') {
         root = r.id
       }
@@ -172,7 +169,7 @@ async function run(): Promise<void> {
     }
 
     for (let k in pages) {
-      if (!(k in wikiPages)) {
+      if (!(k in wikiPages) && pages[k].parent?.database_id === root) {
         deletes[pages[k].id] = k
       }
     }

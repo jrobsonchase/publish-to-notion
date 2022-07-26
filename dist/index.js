@@ -28026,7 +28026,7 @@ function mkProps(front) {
     return properties;
 }
 function run() {
-    var _a, _b;
+    var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const notion = new src/* Client */.KU({
@@ -28105,10 +28105,7 @@ function run() {
                 let r = p;
                 if (r.object == 'page') {
                     let path = ((_b = (_a = r.properties.Path) === null || _a === void 0 ? void 0 : _a.rich_text[0]) === null || _b === void 0 ? void 0 : _b.text.content) || r.id;
-                    pages[path] = {
-                        id: r.id,
-                        properties: r.properties,
-                    };
+                    pages[path] = r;
                 }
                 else if (r.object === 'database') {
                     root = r.id;
@@ -28126,7 +28123,7 @@ function run() {
                 }
             }
             for (let k in pages) {
-                if (!(k in wikiPages)) {
+                if (!(k in wikiPages) && ((_c = pages[k].parent) === null || _c === void 0 ? void 0 : _c.database_id) === root) {
                     deletes[pages[k].id] = k;
                 }
             }
