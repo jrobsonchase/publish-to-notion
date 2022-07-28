@@ -28007,32 +28007,48 @@ function walkWith(obj, f) {
     return true;
 }
 // Convert frontmatter to notion properties.
-function mkProps(front) {
+function mkProps(baseurl, front) {
     var properties = {};
     for (const k in front) {
         const v = front[k];
-        properties[titleize(k)] = [
-            {
-                type: 'text',
-                text: {
-                    content: `${v}`,
+        if (k === "path") {
+            properties['URL'] = {
+                url: `${baseurl}/${v}`,
+            };
+        }
+        else {
+            properties[titleize(k)] = [
+                {
+                    type: 'text',
+                    text: {
+                        content: `${v}`,
+                    },
                 },
-            },
-        ];
+            ];
+        }
     }
     if (!properties.Title) {
-        properties.Title = properties.Path;
+        properties.Title = {
+            title: [{
+                    type: 'text',
+                    text: {
+                        content: `${front.path}`,
+                    },
+                }],
+        };
     }
     return properties;
 }
 function run() {
-    var _a, _b, _c;
+    var _a, _b, _c, _d, _e;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const notion = new src/* Client */.KU({
                 auth: (_a = process.env.NOTION_TOKEN) !== null && _a !== void 0 ? _a : core.getInput('notion_token')
             });
             const rootDir = (_b = process.env.MD_ROOT) !== null && _b !== void 0 ? _b : core.getInput('markdown_root');
+            const notionRoot = (_c = process.env.NOTION_ROOT) !== null && _c !== void 0 ? _c : core.getInput('notion_root');
+            const githubURL = (_d = process.env.GITHUB_URL) !== null && _d !== void 0 ? _d : core.getInput('github_url');
             console.log("parsing markdown documents");
             let wikiPages = Object({});
             mdFiles(rootDir).forEach(file => {
@@ -28098,17 +28114,14 @@ function run() {
                 };
             });
             console.log("looking up existing pages");
-            let root = '';
             let pages = Object({});
             (yield notion.search({})).results.forEach(p => {
-                var _a, _b;
+                var _a;
                 let r = p;
                 if (r.object == 'page') {
-                    let path = ((_b = (_a = r.properties.Path) === null || _a === void 0 ? void 0 : _a.rich_text[0]) === null || _b === void 0 ? void 0 : _b.text.content) || r.id;
+                    let path = ((_a = r.properties.URL) === null || _a === void 0 ? void 0 : _a.url) || r.id;
+                    path = path.replace(`${githubURL}/`, '');
                     pages[path] = r;
-                }
-                else if (r.object === 'database') {
-                    root = r.id;
                 }
             });
             let updates = Object({});
@@ -28123,11 +28136,11 @@ function run() {
                 }
             }
             for (let k in pages) {
-                if (!(k in wikiPages) && ((_c = pages[k].parent) === null || _c === void 0 ? void 0 : _c.database_id) === root) {
+                if (!(k in wikiPages) && ((_e = pages[k].parent) === null || _e === void 0 ? void 0 : _e.database_id.replace(/-/g, '')) === notionRoot) {
                     deletes[pages[k].id] = k;
                 }
             }
-            console.log(`db root: ${root}`);
+            console.log(`db root: ${notionRoot}`);
             console.log("deleting extra pages");
             for (let id in deletes) {
                 console.log(`deleting unknown page: ${deletes[id]}`);
@@ -28140,10 +28153,10 @@ function run() {
             for (let title in creates) {
                 console.log(`creating new page: ${title}`);
                 const { frontMatter, content } = creates[title];
-                const properties = mkProps(frontMatter);
+                const properties = mkProps(githubURL, frontMatter);
                 yield notion.pages.create({
                     parent: {
-                        database_id: root
+                        database_id: notionRoot
                     },
                     properties,
                     children: content,
@@ -28157,7 +28170,7 @@ function run() {
                 console.log("setting properties");
                 let resp = yield notion.pages.update({
                     page_id,
-                    properties: mkProps(frontMatter),
+                    properties: mkProps(githubURL, frontMatter),
                 });
                 let needsUpdate = JSON.stringify(properties) !== JSON.stringify(resp.properties);
                 if (needsUpdate) {
