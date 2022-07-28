@@ -70,6 +70,8 @@ async function run(): Promise<void> {
 
     const rootDir = process.env.MD_ROOT ?? core.getInput('markdown_root')
 
+    const notionRoot = process.env.NOTION_ROOT ?? core.getInput('notion_root')
+
     console.log("parsing markdown documents");
     let wikiPages = Object({})
     mdFiles(rootDir).forEach(file => {
@@ -144,15 +146,12 @@ async function run(): Promise<void> {
     })
 
     console.log("looking up existing pages");
-    let root = ''
     let pages = Object({});
     (await notion.search({})).results.forEach(p => {
       let r = p as { id: string; object: string; properties: any, parent: any }
       if (r.object == 'page') {
         let path = r.properties.Path?.rich_text[0]?.text.content || r.id;
         pages[path] = r;
-      } else if (r.object === 'database') {
-        root = r.id
       }
     })
 
@@ -169,12 +168,12 @@ async function run(): Promise<void> {
     }
 
     for (let k in pages) {
-      if (!(k in wikiPages) && pages[k].parent?.database_id === root) {
+      if (!(k in wikiPages) && pages[k].parent?.database_id.replace(/-/g, '') === notionRoot) {
         deletes[pages[k].id] = k
       }
     }
 
-    console.log(`db root: ${root}`)
+    console.log(`db root: ${notionRoot}`)
 
     console.log("deleting extra pages");
     for (let id in deletes) {
@@ -192,7 +191,7 @@ async function run(): Promise<void> {
       const properties = mkProps(frontMatter);
       await notion.pages.create({
         parent: {
-          database_id: root
+          database_id: notionRoot
         },
         properties,
         children: content,

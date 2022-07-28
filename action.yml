@@ -8,6 +8,9 @@ inputs:
   markdown_root:
     required: true
     description: 'Directory in which to look for markdown files'
+  notion_root:
+    required: true
+    description: 'Database to put the generated documents in'
 runs:
   using: 'node16'
   main: 'dist/index.js'
