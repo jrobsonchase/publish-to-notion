@@ -11,6 +11,9 @@ inputs:
   notion_root:
     required: true
     description: 'Database to put the generated documents in'
+  github_url:
+    required: true
+    description: 'GitHub URL to prepend to file paths'
 runs:
   using: 'node16'
   main: 'dist/index.js'

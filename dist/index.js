@@ -28011,20 +28011,31 @@ function mkProps(baseurl, front) {
     var properties = {};
     for (const k in front) {
         const v = front[k];
-        if (k === "path") {
+        let prop = titleize(k);
+        if (prop === "Path") {
             properties['URL'] = {
                 url: `${baseurl}/${v}`,
             };
         }
+        else if (prop === 'Title') {
+            properties[prop] = {
+                title: [{
+                        type: 'text',
+                        text: {
+                            content: `${v}`,
+                        },
+                    }],
+            };
+        }
         else {
-            properties[titleize(k)] = [
-                {
-                    type: 'text',
-                    text: {
-                        content: `${v}`,
-                    },
-                },
-            ];
+            properties[prop] = {
+                rich_text: [{
+                        type: 'text',
+                        text: {
+                            content: `${v}`,
+                        },
+                    }],
+            };
         }
     }
     if (!properties.Title) {
@@ -28136,7 +28147,8 @@ function run() {
                 }
             }
             for (let k in pages) {
-                if (!(k in wikiPages) && ((_e = pages[k].parent) === null || _e === void 0 ? void 0 : _e.database_id.replace(/-/g, '')) === notionRoot) {
+                let parent_db = (_e = pages[k].parent) === null || _e === void 0 ? void 0 : _e.database_id;
+                if (!(k in wikiPages) && parent_db && parent_db.replace(/-/g, '') === notionRoot) {
                     deletes[pages[k].id] = k;
                 }
             }

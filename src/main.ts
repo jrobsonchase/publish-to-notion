@@ -45,19 +45,29 @@ function mkProps(baseurl: string, front: any): any {
   var properties: any = {};
   for (const k in front) {
     const v = front[k];
-    if (k === "path") {
+    let prop = titleize(k);
+    if (prop === "Path") {
       properties['URL'] = {
         url: `${baseurl}/${v}`,
       };
-    } else {
-      properties[titleize(k)] = [
-        {
+    } else if (prop === 'Title') {
+      properties[prop] = {
+        title: [{
           type: 'text',
           text: {
             content: `${v}`,
           },
-        },
-      ];
+        }],
+      };
+    } else {
+      properties[prop] = {
+        rich_text: [{
+          type: 'text',
+          text: {
+            content: `${v}`,
+          },
+        }],
+      };
     }
   }
 
@@ -184,7 +194,8 @@ async function run(): Promise<void> {
     }
 
     for (let k in pages) {
-      if (!(k in wikiPages) && pages[k].parent?.database_id.replace(/-/g, '') === notionRoot) {
+      let parent_db: string | undefined = pages[k].parent?.database_id;
+      if (!(k in wikiPages) && parent_db && parent_db.replace(/-/g, '') === notionRoot) {
         deletes[pages[k].id] = k
       }
     }
