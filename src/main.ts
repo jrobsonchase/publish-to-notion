@@ -41,22 +41,35 @@ function walkWith(obj: any, f: (obj: any) => boolean): boolean {
 }
 
 // Convert frontmatter to notion properties.
-function mkProps(front: any): any {
+function mkProps(baseurl: string, front: any): any {
   var properties: any = {};
   for (const k in front) {
     const v = front[k];
-    properties[titleize(k)] = [
-      {
-        type: 'text',
-        text: {
-          content: `${v}`,
+    if (k === "path") {
+      properties['URL'] = {
+        url: `${baseurl}/${v}`,
+      };
+    } else {
+      properties[titleize(k)] = [
+        {
+          type: 'text',
+          text: {
+            content: `${v}`,
+          },
         },
-      },
-    ];
+      ];
+    }
   }
 
   if (!properties.Title) {
-    properties.Title = properties.Path;
+    properties.Title = {
+      title: [{
+        type: 'text',
+        text: {
+          content: `${front.path}`,
+        },
+      }],
+    };
   }
 
   return properties;
@@ -71,6 +84,8 @@ async function run(): Promise<void> {
     const rootDir = process.env.MD_ROOT ?? core.getInput('markdown_root')
 
     const notionRoot = process.env.NOTION_ROOT ?? core.getInput('notion_root')
+
+    const githubURL = process.env.GITHUB_URL ?? core.getInput('github_url')
 
     console.log("parsing markdown documents");
     let wikiPages = Object({})
@@ -150,7 +165,8 @@ async function run(): Promise<void> {
     (await notion.search({})).results.forEach(p => {
       let r = p as { id: string; object: string; properties: any, parent: any }
       if (r.object == 'page') {
-        let path = r.properties.Path?.rich_text[0]?.text.content || r.id;
+        let path: string = r.properties.URL?.url || r.id;
+        path = path.replace(`${githubURL}/`, '');
         pages[path] = r;
       }
     })
@@ -188,7 +204,7 @@ async function run(): Promise<void> {
     for (let title in creates) {
       console.log(`creating new page: ${title}`)
       const { frontMatter, content } = creates[title];
-      const properties = mkProps(frontMatter);
+      const properties = mkProps(githubURL, frontMatter);
       await notion.pages.create({
         parent: {
           database_id: notionRoot
@@ -211,7 +227,7 @@ async function run(): Promise<void> {
       console.log("setting properties");
       let resp: any = await notion.pages.update({
         page_id,
-        properties: mkProps(frontMatter),
+        properties: mkProps(githubURL, frontMatter),
       });
 
       let needsUpdate = JSON.stringify(properties) !== JSON.stringify(resp.properties);
