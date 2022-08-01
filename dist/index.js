@@ -28083,7 +28083,16 @@ function run() {
                     frontMatter = dist.parse(frontMatterText);
                     text = lines.slice(frontMatterLen + 2).join('\n');
                 }
-                const blocks = (0,build_src.markdownToBlocks)(text);
+                const warning = {
+                    heading_1: {
+                        rich_text: [{
+                                text: {
+                                    content: "THIS PAGE IS AUTO-GENERATED! DO NOT EDIT!",
+                                },
+                            }],
+                    },
+                };
+                const blocks = [warning, ...(0,build_src.markdownToBlocks)(text)];
                 const replaceLink = function (obj) {
                     // Replace links with literal markdown links
                     if (obj.text.link) {

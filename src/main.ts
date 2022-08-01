@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { Client } from '@notionhq/client'
+import { Client, NotionClientError } from '@notionhq/client'
 import { lstatSync, readdirSync, readFileSync } from 'fs'
 import { join, resolve } from 'path'
 import { markdownToBlocks } from '@tryfabric/martian'
@@ -7,6 +7,7 @@ import { Console } from 'console'
 import YAML from 'yaml';
 import titleize from 'titleize';
 import { updateDatabase } from '@notionhq/client/build/src/api-endpoints'
+import { Block } from '@tryfabric/martian/build/src/notion'
 
 function mdFiles(directory: string): Array<string> {
   return readdirSync(directory).flatMap(file => {
@@ -123,7 +124,17 @@ async function run(): Promise<void> {
         text = lines.slice(frontMatterLen + 2).join('\n');
       }
 
-      const blocks = markdownToBlocks(text)
+      const warning: Block = {
+        heading_1: {
+          rich_text: [{
+            text: {
+              content: "THIS PAGE IS AUTO-GENERATED! DO NOT EDIT!",
+            },
+          }],
+        },
+      };
+
+      const blocks = [warning, ...markdownToBlocks(text)];
 
       const replaceLink = function (obj: any) {
         // Replace links with literal markdown links
