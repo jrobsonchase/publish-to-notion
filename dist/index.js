@@ -28175,13 +28175,23 @@ function run() {
                 console.log(`creating new page: ${title}`);
                 const { frontMatter, content } = creates[title];
                 const properties = mkProps(githubURL, frontMatter);
-                yield notion.pages.create({
+                let start = 0;
+                let end = 100;
+                const page = yield notion.pages.create({
                     parent: {
                         database_id: notionRoot
                     },
                     properties,
-                    children: content,
+                    children: content.slice(start, end),
                 });
+                while (content.slice(end, end + 100).length != 0) {
+                    start = end;
+                    end = end + 100;
+                    yield notion.blocks.children.append({
+                        block_id: page.id,
+                        children: content.slice(start, end),
+                    });
+                }
             }
             console.log("updating existing pages");
             for (let title in updates) {

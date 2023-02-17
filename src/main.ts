@@ -227,13 +227,23 @@ async function run(): Promise<void> {
       console.log(`creating new page: ${title}`)
       const { frontMatter, content } = creates[title];
       const properties = mkProps(githubURL, frontMatter);
-      await notion.pages.create({
+      let start = 0;
+      let end = 100;
+      const page = await notion.pages.create({
         parent: {
           database_id: notionRoot
         },
         properties,
-        children: content,
-      })
+        children: content.slice(start, end),
+      });
+      while(content.slice(end, end+100).length != 0) {
+        start = end;
+        end = end + 100;
+        await notion.blocks.children.append({
+          block_id: page.id,
+          children: content.slice(start, end),
+        });
+      }
     }
 
     console.log("updating existing pages");
